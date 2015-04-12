@@ -1,9 +1,19 @@
 
-var EventEmitter = require('events').EventEmitter;
+const EventEmitter = require('events').EventEmitter;
+const extend = require('util')._extend;
 
 class Player {
 	constructor(options) {
 		this.data = options;
+	}
+}
+
+class Job {
+	constructor(options = {}) {
+		this.data = extend({
+			message: "New Job!!",
+			number: Math.floor(Math.random() * 100000) + 10000
+		}, options);
 	}
 }
 
@@ -25,6 +35,7 @@ class Game {
 	}
 
 	start() {
+		setInterval(() => this._fire('recievedJob', new Job()), 5000);
 		return Promise.resolve();
 	}
 }

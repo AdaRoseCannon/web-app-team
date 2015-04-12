@@ -104,26 +104,26 @@ new Promise(resolve => {
 			if (started) return;
 			started = true;
 			setTimeout(() => animateHeightChange(() => {
-					$('.modal-dialog').addClass('connecting');
-					$('.form-group.name').html(msg.render({
-						name: name,
-						role: role,
-						team: team
-					}, templates.mixins));
-					$('.form-group.name').fadeTo(300, 1);
-					const game = new Game({
-						hosting,
-						role,
-						team,
-						name
-					});
-					game.init().then(() => {
-						$('.form-group.name .panel-info').removeClass('panel-info').addClass('panel-success');
-						this.setTimeout(() => {
-							closeModal();
-						}, 1500);
-						resolve(game);
-					});
+				$('.modal-dialog').addClass('connecting');
+				$('.form-group.name').html(msg.render({
+					name: name,
+					role: role,
+					team: team
+				}, templates.mixins));
+				$('.form-group.name').fadeTo(300, 1);
+				const game = new Game({
+					hosting,
+					role,
+					team,
+					name
+				});
+				game.init().then(() => {
+					$('.form-group.name .panel-info').removeClass('panel-info').addClass('panel-success');
+					this.setTimeout(() => {
+						closeModal();
+					}, 1500);
+					resolve(game);
+				});
 			}, $('.modal-dialog')[0], Array.prototype.slice.call($('.modal-dialog')[0].querySelectorAll('.modal-body')).concat($('.modal-header')[0]).concat($('.modal-footer')[0])), 300);
 		});
 	});
@@ -139,6 +139,8 @@ new Promise(resolve => {
 			$('#notifications-target').append(newPlayerNotification);
 			setTimeout(() => {
 				newPlayerNotification.fadeTo(300, 0, () => {
+
+					// TODO: Make this render nicely
 					animateHeightChange(
 						() => newPlayerNotification.remove(),
 						$('#notifications-target')[0],
@@ -154,4 +156,15 @@ new Promise(resolve => {
 	});
 }).then (game => {
 	$('.workspace').removeClass('waiting').addClass('playing');
+
+	game.on('recievedPanel', () => {
+
+	}).on('recievedJob', ticket => {
+		$('#job-target').html(hogan.compile(templates.mixins.ticket).render(ticket.data));
+	}).on('timeout', () => {
+
+	}).on('complete', () => {
+
+	});
+
 });

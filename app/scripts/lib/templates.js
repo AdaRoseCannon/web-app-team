@@ -16,6 +16,11 @@ module.exports = {
                 <button type="button" class="close" data-dismiss="alert">×</button>{{{message}}}
             </div>
 		`,
+		ticket: `
+			<div class="alert alert-info">
+				Ticket #{{{number}}}: {{{message}}}
+			</div>
+		`,
 	},
 	role: {
 		titles: [
