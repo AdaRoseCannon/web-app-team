@@ -1,6 +1,7 @@
 const hogan = require('hogan');
 const templates = require('./lib/templates');
 const utils = require('./lib/utils');
+const Game = require('./lib/game');
 
 function animateHeightChange(f, el, children, callback) {
 	let dBefore = el.getBoundingClientRect();
@@ -55,18 +56,12 @@ function animateHeightChange(f, el, children, callback) {
 	setTimeout(postTransition, 32);
 }
 
-function makeConnection() {
-	return new Promise((resolve, reject) => {
-		setTimeout(resolve, 500 + Math.random() * 3000);
-	});
-}
-
 const originalModal = $('.modal').html();
 function resetModal() {
 	$('.modal').html(originalModal);
 }
 
-function closeModal() {
+function closeModal(e) {
 	const m = $('.modal');
 	const b = $('.modal-backdrop');
 	m.hide(e);
@@ -82,34 +77,46 @@ $('#toggle-host').on('change', e => {
 		t.fadeTo(300, 1);
 	});
 });
-$('#modal-okay').on('click', () => {
-	var msg = hogan.compile(templates.mixins.joining);
-	var name = $('#name-input').val();
-	var role = hogan.compile(templates.mixins.roleFormat).render({
-		prefix: utils.randomFrom(templates.role.prefixes),
-		role: utils.randomFrom(templates.role.roles),
-		title: utils.randomFrom(templates.role.titles)
+new Promise(resolve => {
+	$('#modal-okay').on('click', () => {
+		var msg = hogan.compile(templates.mixins.joining);
+		var name = $('#name-input').val();
+		var role = hogan.compile(templates.mixins.roleFormat).render({
+			prefix: utils.randomFrom(templates.role.prefixes),
+			role: utils.randomFrom(templates.role.roles),
+			title: utils.randomFrom(templates.role.titles)
+		});
+		var hosting = $('#toggle-host').val();
+		var team = hosting ? $('#peerjs-id').html() : $('#team-code-input').val();
+		var started = false;
+		$('.toggle-hosting, .form-group.name').fadeTo(300, 0, () => {
+			if (started) return;
+			started = true;
+			setTimeout(() => animateHeightChange(() => {
+					$('.modal-dialog').addClass('connecting');
+					$('.form-group.name').html(msg.render({
+						name: name,
+						role: role,
+						team: team
+					}, templates.mixins));
+					$('.form-group.name').fadeTo(300, 1);
+					const game = new Game({
+						hosting,
+						role,
+						team,
+						name
+					});
+					game.init().then(() => {
+						$('.form-group.name .panel-info').removeClass('panel-info').addClass('panel-success');
+						$('.introduction').hide(300);
+						this.setTimeout(() => {
+							closeModal();
+						}, 1500);
+						resolve(game);
+					});
+			}, $('.modal-dialog')[0], Array.prototype.slice.call($('.modal-dialog')[0].querySelectorAll('.modal-body')).concat($('.modal-header')[0]).concat($('.modal-footer')[0])), 300);
+		});
 	});
-	var team = $('#toggle-host').val() ? $('#peerjs-id').html() : $('#team-code-input').val();
-	var started = false;
-	$('.toggle-hosting, .form-group.name').fadeTo(300, 0, () => {
-		if (started) return;
-		started = true;
-		setTimeout(() => animateHeightChange(() => {
-				$('.modal-dialog').addClass('connecting');
-				$('.form-group.name').html(msg.render({
-					name: name,
-					role: role,
-					team: team
-				}, templates.mixins));
-				$('.form-group.name').fadeTo(400, 1);
-				makeConnection(team).then(() => {
-					$('.form-group.name .info').removeClass('.info').addClass('success');
-					this.setTimeout(() => {
-						closeModal();
-						resetModal();
-					}, resetModal);
-				});
-		}, $('.modal-dialog')[0], Array.prototype.slice.call($('.modal-dialog')[0].querySelectorAll('.modal-body')).concat($('.modal-header')[0]).concat($('.modal-footer')[0])), 300);
-	});
+}).then(game => {
+	console.log(game.data);
 });
