@@ -9,12 +9,28 @@ $('#toggle-host').on('change', e => {
 
 function animateHeightChange(f, el, children, callback) {
 	let dBefore = el.getBoundingClientRect();
+	children.forEach(c => $(c).data('old', c.getBoundingClientRect()));
 	f();
+
 	let dAfter = el.getBoundingClientRect();
 	var scaleChange = {
 		width: dAfter.width/dBefore.width,
 		height: dAfter.height/dBefore.height
 	};
+
+	children.forEach(c => {
+		let oldPos = $(c).data('old');
+		let newPos = c.getBoundingClientRect();
+		let cDiffs = {
+			top: (oldPos.top - dBefore.top) * (scaleChange.height - 1) + (oldPos.top - newPos.top),
+			left: (oldPos.left - dBefore.left) * (scaleChange.width - 1) + (oldPos.left - newPos.left)
+		};
+		$(c).data('old', null);
+		c.style.transformOrigin = "0 0 0";
+		c.style.transition = "0s";
+		c.style.transform = `scale(${scaleChange.width}, ${scaleChange.height}) translate(${cDiffs.left}px, ${cDiffs.top}px)`;
+	});
+
 	let oldStyle = window.getComputedStyle(el);
 	let oldStyleTransform = oldStyle.transform;
 	let oldStyleTransition = oldStyle.transition;
@@ -23,18 +39,7 @@ function animateHeightChange(f, el, children, callback) {
 	el.style.transform = `${oldStyleTransform} scale(${1/scaleChange.width}, ${1/scaleChange.height})`;
 	el.style.overflow = "hidden";
 
-	children.forEach(c => {
-		let cBefore = c.getBoundingClientRect();
-		let cDiffs = {
-			top: (cBefore.top - dBefore.top) * (scaleChange.height - 1),
-			left: (cBefore.left - dBefore.left) * (scaleChange.width - 1)
-		};
-		c.style.transformOrigin = "0 0 0";
-		c.style.transition = "0s";
-		c.style.transform = `scale(${scaleChange.width}, ${scaleChange.height}) translate(${cDiffs.left}px, ${cDiffs.top}px)`;
-	});
-
-	requestAnimationFrame(() => {
+	$(el).one("transitionend", () => {
 		el.style.transition = oldStyleTransition;
 		el.style.transform = oldStyleTransform;
 
