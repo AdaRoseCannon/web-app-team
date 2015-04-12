@@ -1,0 +1,55 @@
+// bower:scss
+// endbower
+
+html, body {
+	margin: 0;
+	padding: 0;
+	height: 100%;
+	overflow: hidden;
+	font-family: sans-serif;
+}
+
+.stage {
+	width: 100%;
+	height: 100%;
+	background: black;
+}
+
+body.creator {
+	height: 100%;
+
+	.workspace {
+		width: 100%;
+		height: 100%;
+		padding-bottom: 1em;
+
+		.workspace-editor {
+			padding-bottom: 15px;
+
+			button {
+				position: absolute;
+				margin: 1em;
+				z-index: 2;
+			}
+
+			#render-target {
+				height: 100%;
+				position: absolute;
+				left: 0;
+				top: 0;
+				right: 0;
+				left: 0;
+			}
+			height: 100%;
+		}
+
+		.workspace-contents {
+			padding: 1em;
+			overflow: auto;
+
+			.editable {
+				cursor: pointer;
+			}
+		}
+	}
+}
