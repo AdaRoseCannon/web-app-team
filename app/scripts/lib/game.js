@@ -24,6 +24,7 @@ class Game {
 		this.on = _events.on;
 		this._fire = _events.emit;
 		this.player = new Player(options);
+		this.sprint = 1;
 
 		setInterval(() => this._fire('newPlayer', this.player), 3000);
 	}
