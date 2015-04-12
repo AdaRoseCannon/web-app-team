@@ -38,3 +38,40 @@ html, body {
 		opacity: 0.5;
 	}
 }
+
+.alert {
+	transition: transform opacity 0.3s ease;
+}
+
+#introduction {
+	display: none;
+	opacity: 0;
+	transition: transform opacity 0.3s ease;
+
+	.workspace.introduction & {
+		opacity: 1;
+		display: block;
+	}
+}
+
+#waiting-room {
+	display: none;
+	opacity: 0;
+	transition: transform opacity 0.3s ease;
+
+	.workspace.waiting & {
+		opacity: 1;
+		display: block;
+	}
+}
+
+#game-play-space {
+	display: none;
+	opacity: 0;
+	transition: transform opacity 0.3s ease;
+
+	.workspace.playing & {
+		opacity: 1;
+		display: block;
+	}
+}

@@ -12,10 +12,10 @@ class Game {
 		const _events = new EventEmitter();
 		this.data = options;
 		this.on = _events.on;
-		this._fire = _events.fire;
+		this._fire = _events.emit;
 		this.player = new Player(options);
 
-		setInterval(() => this.fire('newPlayer', this.player), 3000);
+		setInterval(() => this._fire('newPlayer', this.player), 3000);
 	}
 
 	init() {

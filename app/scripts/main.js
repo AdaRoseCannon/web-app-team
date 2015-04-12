@@ -3,7 +3,13 @@ const templates = require('./lib/templates');
 const utils = require('./lib/utils');
 const Game = require('./lib/game');
 
-function animateHeightChange(f, el, children, callback) {
+function animateHeightChange(f, el, children, options, callback) {
+
+	if (typeof options === 'function') {
+		callback = options;
+		options = {};
+	}
+
 	let dBefore = el.getBoundingClientRect();
 	children.forEach(c => $(c).data('old', c.getBoundingClientRect()));
 	f();
@@ -15,6 +21,11 @@ function animateHeightChange(f, el, children, callback) {
 	};
 
 	children.forEach(c => {
+
+		// Ignore elements removed from the dom
+		if (!c.parentElement) {
+			return;
+		}
 		let oldPos = $(c).data('old');
 		let newPos = c.getBoundingClientRect();
 		let cDiffs = {
@@ -108,7 +119,6 @@ new Promise(resolve => {
 					});
 					game.init().then(() => {
 						$('.form-group.name .panel-info').removeClass('panel-info').addClass('panel-success');
-						$('.introduction').hide(300);
 						this.setTimeout(() => {
 							closeModal();
 						}, 1500);
@@ -118,7 +128,23 @@ new Promise(resolve => {
 		});
 	});
 }).then(game => {
+
+	$('.workspace').removeClass('introduction').addClass('waiting');
+	const notification = hogan.compile(templates.mixins.notification);
 	game.on('newPlayer', p => {
-		$('#notifications-target').appendTo('Hello');
+		let newPlayerNotification = $(notification.render({
+			message: `${p.data.name} has joined from company-X as your new ${p.data.role}`
+		}, templates.mixins));
+		newPlayerNotification.fadeTo(0, 0).fadeTo(300, 1);
+		$('#notifications-target').append(newPlayerNotification);
+		setTimeout(() => {
+			newPlayerNotification.fadeTo(300, 0, () => {
+				animateHeightChange(
+					() => newPlayerNotification.remove(),
+					$('#notifications-target')[0],
+					Array.prototype.slice.call($('#notifications-target')[0].querySelectorAll('.alert'))
+				);
+			});
+		}, 6000);
 	});
 });
