@@ -1,11 +1,5 @@
-$('#web-team-begin').on('click', () => $('.modal').modal());
-$('#toggle-host').on('change', e => {
-	let t = $('.toggle-wrap');
-	t.fadeTo(0, 0);
-	animateHeightChange(() => e.currentTarget.checked ? t.addClass('host') : t.removeClass('host'), $('.modal-dialog')[0], Array.prototype.slice.call($('.modal-dialog')[0].querySelectorAll('.modal-body > .form-group')).concat($('.modal-header')[0]).concat($('.modal-footer')[0]), () => {
-		t.fadeTo(300, 1);
-	});
-});
+const hogan = require('hogan');
+const templates = require('./lib/templates');
 
 function animateHeightChange(f, el, children, callback) {
 	let dBefore = el.getBoundingClientRect();
@@ -55,3 +49,16 @@ function animateHeightChange(f, el, children, callback) {
 		});
 	});
 }
+
+$('#web-team-begin').on('click', () => $('.modal').modal());
+$('#toggle-host').on('change', e => {
+	let t = $('.toggle-wrap');
+	t.fadeTo(0, 0);
+	animateHeightChange(() => e.currentTarget.checked ? t.addClass('host') : t.removeClass('host'), $('.modal-dialog')[0], Array.prototype.slice.call($('.modal-dialog')[0].querySelectorAll('.modal-body > .form-group')).concat($('.modal-header')[0]).concat($('.modal-footer')[0]), () => {
+		t.fadeTo(300, 1);
+	});
+});
+$('#modal-okay').on('click', () => {
+	var msg = hogan.compile(templates.welcomeMessage);
+	$('.modal-body').html(msg.render({name: $('#name-input').val()}));
+});

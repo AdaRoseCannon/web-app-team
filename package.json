@@ -37,5 +37,8 @@
     "tween.js": "~0.14.0",
     "vinyl-source-stream": "^1.0.0",
     "wiredep": "^2.0.0"
+  },
+  "dependencies": {
+    "hogan": "~1.0.2"
   }
 }
