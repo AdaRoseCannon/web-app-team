@@ -23,3 +23,18 @@ html, body {
 		}
 	}
 }
+
+.modal-dialog.connecting{
+	.toggle-hosting, .toggle-wrap {
+		display: none;
+	}
+
+	.toggle-wrap.host {
+		display: block;
+	}
+
+	#modal-okay {
+		pointer-events: none;
+		opacity: 0.5;
+	}
+}

@@ -1,5 +1,6 @@
 const hogan = require('hogan');
 const templates = require('./lib/templates');
+const utils = require('./lib/utils');
 
 function animateHeightChange(f, el, children, callback) {
 	let dBefore = el.getBoundingClientRect();
@@ -33,7 +34,7 @@ function animateHeightChange(f, el, children, callback) {
 	el.style.transform = `${oldStyleTransform} scale(${1/scaleChange.width}, ${1/scaleChange.height})`;
 	el.style.overflow = "hidden";
 
-	$(el).one("transitionend", () => {
+	function postTransition() {
 		el.style.transition = oldStyleTransition;
 		el.style.transform = oldStyleTransform;
 
@@ -47,8 +48,31 @@ function animateHeightChange(f, el, children, callback) {
 			c.style.transition = oldStyleTransition;
 			c.style.transform = 'scale(1, 1)';
 		});
+		$(el).off("transitionend", postTransition);
+	}
+
+	$(el).on("transitionend", postTransition);
+	setTimeout(postTransition, 32);
+}
+
+function makeConnection() {
+	return new Promise((resolve, reject) => {
+		setTimeout(resolve, 500 + Math.random() * 3000);
 	});
 }
+
+const originalModal = $('.modal').html();
+function resetModal() {
+	$('.modal').html(originalModal);
+}
+
+function closeModal() {
+	const m = $('.modal');
+	const b = $('.modal-backdrop');
+	m.hide(e);
+	b.hide(200, b.remove);
+}
+$('.modal').on('hide.bs.modal', () => setTimeout(resetModal, 500));
 
 $('#web-team-begin').on('click', () => $('.modal').modal());
 $('#toggle-host').on('change', e => {
@@ -59,6 +83,33 @@ $('#toggle-host').on('change', e => {
 	});
 });
 $('#modal-okay').on('click', () => {
-	var msg = hogan.compile(templates.welcomeMessage);
-	$('.modal-body').html(msg.render({name: $('#name-input').val()}));
+	var msg = hogan.compile(templates.mixins.joining);
+	var name = $('#name-input').val();
+	var role = hogan.compile(templates.mixins.roleFormat).render({
+		prefix: utils.randomFrom(templates.role.prefixes),
+		role: utils.randomFrom(templates.role.roles),
+		title: utils.randomFrom(templates.role.titles)
+	});
+	var team = $('#toggle-host').val() ? $('#peerjs-id').html() : $('#team-code-input').val();
+	var started = false;
+	$('.toggle-hosting, .form-group.name').fadeTo(300, 0, () => {
+		if (started) return;
+		started = true;
+		setTimeout(() => animateHeightChange(() => {
+				$('.modal-dialog').addClass('connecting');
+				$('.form-group.name').html(msg.render({
+					name: name,
+					role: role,
+					team: team
+				}, templates.mixins));
+				$('.form-group.name').fadeTo(400, 1);
+				makeConnection(team).then(() => {
+					$('.form-group.name .info').removeClass('.info').addClass('success');
+					this.setTimeout(() => {
+						closeModal();
+						resetModal();
+					}, resetModal);
+				});
+		}, $('.modal-dialog')[0], Array.prototype.slice.call($('.modal-dialog')[0].querySelectorAll('.modal-body')).concat($('.modal-header')[0]).concat($('.modal-footer')[0])), 300);
+	});
 });

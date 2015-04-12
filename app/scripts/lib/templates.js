@@ -1,17 +1,46 @@
 module.exports = {
-	welcomeMessage: "New team member<br />{{{name}}}",
-	name: {
+	mixins: {
+		businessCard: "{{{name}}} - {{{role}}}",
+		roleFormat: '{{{prefix}}} {{{role}}} {{{title}}}',
+		joining:   `<div class="panel panel-info">
+						<div class="panel-heading">
+							<h3 class="panel-title">Attempting to join {{{team}}}</h3>
+						</div>
+						<div class="panel-body">
+							{{> businessCard }}
+						</div>
+					</div>`,
+				},
+
+	role: {
 		titles: [
-			'ninja',
-			'guru',
-			'engineer'
+			'Ninja',
+			'Guru',
+			'Engineer',
+			'Intern',
+			'Evangelist',
+			'Developer'
 		],
-		prefix: [
-			'lead',
-			'junior',
-			'senior',
-			'master',
-			'intern'
+		roles: [
+			'JavaScript',
+			'Backend',
+			'Frontend',
+			'Coffee Script',
+			'Testing',
+			'QA',
+			'Full Stack',
+			'Social Media',
+			'Networking',
+			'Java',
+			'PHP',
+			'Ruby'
+		],
+		prefixes: [
+			'Lead',
+			'Junior',
+			'Senior',
+			'Managing',
+			'10x'
 		]
 	}
 
