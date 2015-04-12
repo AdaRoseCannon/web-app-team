@@ -118,5 +118,7 @@ new Promise(resolve => {
 		});
 	});
 }).then(game => {
-	console.log(game.data);
+	game.on('newPlayer', p => {
+		$('#notifications-target').appendTo('Hello');
+	});
 });
