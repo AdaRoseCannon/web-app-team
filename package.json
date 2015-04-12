@@ -39,6 +39,7 @@
     "wiredep": "^2.0.0"
   },
   "dependencies": {
-    "hogan": "~1.0.2"
+    "hogan": "~1.0.2",
+    "peerjs": "~0.3.14"
   }
 }
