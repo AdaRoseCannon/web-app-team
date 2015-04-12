@@ -128,23 +128,30 @@ new Promise(resolve => {
 		});
 	});
 }).then(game => {
+	return new Promise(resolve => {
+		$('.workspace').removeClass('introduction').addClass('waiting');
+		const notification = hogan.compile(templates.mixins.notification);
+		game.on('newPlayer', p => {
+			let newPlayerNotification = $(notification.render({
+				message: `${p.data.name} has joined from company-X as your new ${p.data.role}`
+			}, templates.mixins));
+			newPlayerNotification.fadeTo(0, 0).fadeTo(300, 1);
+			$('#notifications-target').append(newPlayerNotification);
+			setTimeout(() => {
+				newPlayerNotification.fadeTo(300, 0, () => {
+					animateHeightChange(
+						() => newPlayerNotification.remove(),
+						$('#notifications-target')[0],
+						Array.prototype.slice.call($('#notifications-target')[0].querySelectorAll('.alert'))
+					);
+				});
+			}, 6000);
+		});
 
-	$('.workspace').removeClass('introduction').addClass('waiting');
-	const notification = hogan.compile(templates.mixins.notification);
-	game.on('newPlayer', p => {
-		let newPlayerNotification = $(notification.render({
-			message: `${p.data.name} has joined from company-X as your new ${p.data.role}`
-		}, templates.mixins));
-		newPlayerNotification.fadeTo(0, 0).fadeTo(300, 1);
-		$('#notifications-target').append(newPlayerNotification);
-		setTimeout(() => {
-			newPlayerNotification.fadeTo(300, 0, () => {
-				animateHeightChange(
-					() => newPlayerNotification.remove(),
-					$('#notifications-target')[0],
-					Array.prototype.slice.call($('#notifications-target')[0].querySelectorAll('.alert'))
-				);
-			});
-		}, 6000);
+		$('#game-start').on('click', () => {
+			game.start().then(() => resolve(game));
+		});
 	});
+}).then (game => {
+	$('.workspace').removeClass('waiting').addClass('playing');
 });

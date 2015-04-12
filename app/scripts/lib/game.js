@@ -23,6 +23,10 @@ class Game {
 			setTimeout(resolve, 500 + Math.random() * 3000);
 		});
 	}
+
+	start() {
+		return Promise.resolve();
+	}
 }
 
 module.exports = Game;
