@@ -33,7 +33,7 @@ gulp.task('browserify', function () {
 	return Promise.all(fs.readdirSync('./app/scripts/').map(function (a) {
 		var path = './app/scripts/' + a;
 		if (!fs.statSync(path).isDirectory()) {
-			return new Promise(function (resolve) {
+			return new Promise(function (resolve, reject) {
 				process.stdout.write('Browserify: Processing ' + a + '\n');
                 var writer = fs.createWriteStream('.tmp/scripts/' + a);
                 writer.on('finish', function () {
@@ -45,6 +45,10 @@ gulp.task('browserify', function () {
 					.transform(debowerify)
 					.require(require.resolve(path), { entry: true })
 					.bundle()
+					.on('error', function(err) {
+						this.emit('exit');
+						reject(err);
+					})
 					.pipe(writer);
 			}).then(function (a) {
 				process.stdout.write('Browserify: Finished processing ' + a + '\n');
@@ -119,14 +123,14 @@ gulp.task('connect', ['browserify', 'styles'], function () {
 		.use(serveIndex('app'));
 
 	require('http').createServer(app)
-		.listen(9000)
+		.listen(8080)
 		.on('listening', function () {
-			console.log('Started connect web server on http://localhost:9000');
+			console.log('Started connect web server on http://0.0.0.0:8080');
 		});
 });
 
 gulp.task('serve', ['connect', 'watch'], function () {
-	require('opn')('http://localhost:9000/');
+	require('opn')('http://0.0.0.0:8080/');
 });
 
 // inject bower components
