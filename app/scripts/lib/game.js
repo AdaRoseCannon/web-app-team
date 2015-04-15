@@ -14,13 +14,13 @@ const peerSettings = {
 class Player {
 	constructor(options) {
 		this.data = {};
-		['name', 'role', 'team', 'hosting'].forEach(prop => {
+		['id', 'name', 'role', 'team', 'hosting'].forEach(prop => {
 			if (options[prop] === undefined) {
 				throw Error('Missing player property', prop);
 			}
 			this.data[prop] = options[prop];
 		});
-		['peer', 'dc'].forEach(prop => {
+		['dc'].forEach(prop => {
 			if (options[prop]) {
 				this[prop] = options[prop];
 			}
@@ -45,7 +45,10 @@ function sendData(dataConn, type, data) {
 }
 
 function _addPlayer(player) {
-	this.data.players[player.id] = player;
+	if (!player.data.id) {
+		debugger;
+	}
+	this.data.players[player.data.id] = player;
 	if (player.hosting) {
 		this.data.host = player;
 	}
@@ -54,9 +57,6 @@ function _addPlayer(player) {
 
 // Wait for players to connect.
 function _host() {
-	this.data.hostData = {
-		players: {}
-	};
 	this.peer.on('connection', dataConn => {
 		console.log('Connection recieved from', dataConn.peer);
 		dataConn.on('data', data => {
@@ -65,17 +65,22 @@ function _host() {
 				console.log('That data was a join request');
 				const playerData =  extend({
 					dc: dataConn,
-					peer: dataConn.peer
+					id: dataConn.peer
 				}, data.data);
 
+				let welcomePack = [];
+				for (var i in this.data.players) {
+					welcomePack.push(this.data.players[i].data);
+				}
+				sendData(dataConn, 'welcome', welcomePack);
+
 				const newPlayer = new Player(playerData);
-				this.data.hostData.players[playerData.peer] = newPlayer;
 				_addPlayer.bind(this)(newPlayer);
 			}
 		});
 		setTimeout(() => sendData(dataConn, 'ready'), 100);
 	});
-	return Promise.resolve(new Player(this.data));
+	return Promise.resolve(new Player(extend(this.data, {id: this.data.team})));
 }
 
 // Connect to the host and recieve a list of players.
@@ -100,13 +105,13 @@ function _client() {
 		sendData(dataConn, 'join', this.data);
 		dataConn.on('data', data => {
 			if (data.type === 'welcome') {
-				data.players.forEach(p => _addPlayer.bind(this)(new Player(p)));
+				data.data.forEach(d => _addPlayer.bind(this)(new Player(d)));
 			}
 		});
+
 		return new Player(extend({
 			dc: dataConn,
-			peer: dataConn.peer,
-			id: dataConn.peer.id
+			id: dataConn.peer
 		}, this.data));
 	}).catch(e => {
 		console.log("Error", e);
@@ -190,7 +195,7 @@ class Game {
 
 			// Add self to the player list
 			this.player = player;
-			setTimeout(() => _addPlayer.bind(this)(player), 3000);
+			setTimeout(() => _addPlayer.bind(this)(player), 1000);
 		});
 	}
 
