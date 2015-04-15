@@ -2,6 +2,8 @@ const hogan = require('hogan');
 const templates = require('./lib/templates');
 const utils = require('./lib/utils');
 const Game = require('./lib/game');
+const Peer = require('peerjs');
+window.Peer = Peer;
 
 function animateHeightChange(f, el, children, options, callback) {
 
