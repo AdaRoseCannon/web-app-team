@@ -80,6 +80,8 @@ Promise.resolve().then(() => {
 		game.on('newPlayer', p => {
 			$('#founders').append(hogan.compile(templates.mixins.rolecall).render(p.data, templates.mixins));
 		});
+
+		game.on('playerDisco', p => $('#founders').find('#waitingRoom-' + p.id).remove());
 	});
 }).then (game => {
 	$('.workspace').removeClass('waiting').addClass('playing');

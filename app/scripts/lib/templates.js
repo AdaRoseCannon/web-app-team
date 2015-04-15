@@ -28,7 +28,7 @@ module.exports = {
 			<h1 class="welcome banner">Welcome to '{{{team}}}'</h1>
 		`,
 		rolecall: `
-			<tr><td>{{{team}}}</td><td>{{> businessCard }}</td></tr>
+			<tr id="waitingRoom-{{{id}}}"><td>{{{team}}}</td><td>{{> businessCard }}</td></tr>
 		`
 	},
 	role: {

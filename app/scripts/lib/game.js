@@ -11,6 +11,13 @@ const peerSettings = {
 	debug: 2
 };
 
+function sendData(dataConn, type, data) {
+	dataConn.send({
+		type: type,
+		data: data
+	});
+}
+
 class Player {
 	constructor(options) {
 		this.data = {};
@@ -20,11 +27,17 @@ class Player {
 			}
 			this.data[prop] = options[prop];
 		});
-		['dc'].forEach(prop => {
-			if (options[prop]) {
-				this[prop] = options[prop];
-			}
-		});
+		if (options.dc) {
+			this.dc = options.dc;
+		}
+	}
+
+	sendData(type, data) {
+		if (this.dc) {
+			sendData(this.dc, type, data);
+		} else {
+			throw Error('No connection to player');
+		}
 	}
 }
 
@@ -37,21 +50,32 @@ class Job {
 	}
 }
 
-function sendData(dataConn, type, data) {
-	dataConn.send({
-		type: type,
-		data: data
-	});
+function globalFire(eventType, eventData) {
+	var data = {
+		eventType,
+		eventData
+	};
+	if (this.data.hosting) {
+
+		// Fire the event locally
+		this._fire(data.eventType, data.eventData);
+
+		this.data.players.forEach(p => {
+
+			// Get all connected clients to fire the event
+			if(p !== this.player) {
+				p.sendData('event', data);
+			}
+		});
+	} else {
+
+		// Ask the host to send the event to everyone.
+		sendData(this.hostDc, 'globalFireRequest', data);
+	}
 }
 
 function _addPlayer(player) {
-	if (!player.data.id) {
-		debugger;
-	}
-	this.data.players[player.data.id] = player;
-	if (player.hosting) {
-		this.data.host = player;
-	}
+	this.data.players.push(player);
 	this._fire('newPlayer', player);
 }
 
@@ -68,14 +92,14 @@ function _host() {
 					id: dataConn.peer
 				}, data.data);
 
-				let welcomePack = [];
-				for (var i in this.data.players) {
-					welcomePack.push(this.data.players[i].data);
-				}
-				sendData(dataConn, 'welcome', welcomePack);
+				// Send the data from each player
+				sendData(dataConn, 'welcome', this.data.players.map(p => p.data));
 
 				const newPlayer = new Player(playerData);
 				_addPlayer.bind(this)(newPlayer);
+			}
+			if (data.type === 'globalFireRequest') {
+				globalFire.bind(this)(data.data.eventType, data.data.eventData);
 			}
 		});
 		setTimeout(() => sendData(dataConn, 'ready'), 100);
@@ -92,7 +116,6 @@ function _client() {
 			.on('error', reject);
 	}).then(() => {
 		return new Promise((resolve, reject) => {
-			console.log("Connecting, id:", this.peer.id, "connecting to", this.data.team);
 			var dataConn = this.peer.connect(this.data.team)
 				.on('data', data => {
 					if (data.type === 'ready') {
@@ -101,52 +124,38 @@ function _client() {
 				.on('error', reject);
 		});
 	}).then(dataConn => {
-		console.log('Connected sending join request');
+
+		window.addEventListener("beforeunload", () => globalFire.bind(this)('playerDisco', this.player.data));
+
 		sendData(dataConn, 'join', this.data);
 		dataConn.on('data', data => {
 			if (data.type === 'welcome') {
 				data.data.forEach(d => _addPlayer.bind(this)(new Player(d)));
+				this.hostDc = dataConn;
+			}
+			if (data.type === 'event') {
+				this._fire(data.data.eventType, data.data.eventData);
 			}
 		});
 
 		return new Player(extend({
-			dc: dataConn,
-			id: dataConn.peer
+			id: this.peer.id
 		}, this.data));
 	}).catch(e => {
 		console.log("Error", e);
 	});
 }
 
-// Fired Events Go To All Peers
-// Events from Peers fire an event
-function _setUpGlobalEvents() {
-	const oldFire = this._fire;
-	this._fire = function (...args) {
-		oldFire.apply(args);
-		if (this.data.hosting) {
-
-		} else {
-		}
-	}.bind(this);
-
-	if (!this.data.hosting) {
-		this.data.host.dc.on('data', function () {
-			if (data.type === 'event') {
-				oldFire(data.event.type, data.event.data);
-			}
-		});
-	}
-}
-
 class Game {
 	constructor() {
+
+		window.globalFire = globalFire.bind(this);
 		this.data = {};
 		const _events = new EventEmitter();
 		this.on = _events.on;
 		this._fire = _events.emit;
 		this.data.flexibleName = true;
-		this.data.players = {};
+		this.data.players = [];
 	}
 
 	getTeamName(dom, retries = 0) {
@@ -196,6 +205,15 @@ class Game {
 			// Add self to the player list
 			this.player = player;
 			setTimeout(() => _addPlayer.bind(this)(player), 1000);
+
+
+			this.on('playerDisco', p => {
+				console.log(this.data.players.length);
+				this.data.players = this.data.players.filter(i => {
+					return p.id !== i.data.id;
+				});
+				console.log(this.data.players.length);
+			});
 		});
 	}
 
