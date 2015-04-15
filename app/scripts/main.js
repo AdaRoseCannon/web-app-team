@@ -72,8 +72,10 @@ Promise.resolve().then(() => {
 		$('#banner-holder').html(hogan.compile(templates.mixins.banner).render(game.data));
 
 		$('#game-start').on('click', () => {
-			game.start().then(() => resolve(game));
+			game.ready();
 		});
+
+		game.on('beginGame', () => game.start().then(resolve));
 
 		$('#founders').append(`<thead><tr><th>Company Name</th><th>Name - Role</th></tr></thead>`);
 
@@ -88,9 +90,9 @@ Promise.resolve().then(() => {
 
 	game.on('recievedPanel', () => {
 
-	}).on('recievedJob', ticket => {
-		$('#job-target').html(hogan.compile(templates.mixins.ticket).render(ticket.data));
-	}).on('timeout', () => {
+	}).on('recievedJob', ticketData => {
+		$('#job-target').html(hogan.compile(templates.mixins.ticket).render(ticketData));
+	}).on('gameOver', () => {
 
 	}).on('complete', () => {
 

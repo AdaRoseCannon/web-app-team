@@ -39,6 +39,14 @@ class Player {
 			throw Error('No connection to player');
 		}
 	}
+
+	sendEvent(eventType, eventData) {
+		var data = {
+			eventType,
+			eventData
+		};
+		this.sendData('event', data);
+	}
 }
 
 class Job {
@@ -47,6 +55,17 @@ class Job {
 			message: "New Job!!",
 			number: Math.floor(Math.random() * 100000) + 10000
 		}, options);
+	}
+}
+
+function fireEventAtRandomPlayer(eventType, eventData) {
+	const p = utils.randomFrom(this.data.players);
+
+	// If the host then just fire event
+	if (p === this.player) {
+		this._fire(eventType, eventData);
+	} else {
+		p.sendEvent(eventType, eventData);
 	}
 }
 
@@ -196,6 +215,7 @@ class Game {
 
 		return Promise.resolve().then(() => {
 			if (this.data.hosting) {
+				this.fireEventAtRandomPlayer = fireEventAtRandomPlayer.bind(this);
 				return _host.bind(this)();
 			} else {
 				return _client.bind(this)();
@@ -214,11 +234,41 @@ class Game {
 				});
 				console.log(this.data.players.length);
 			});
+
+			if (this.data.hosting) {
+				this.on('playerReady', id => {
+					let allready = true;
+					this.data.players.forEach(p => {
+						if (p.data.id === id) {
+							p.data.ready = true;
+						}
+						allready = allready && p.data.ready;
+					});
+					if (allready) {
+						globalFire.bind(this)('beginGame');
+					}
+				});
+			}
 		});
 	}
 
+	// Mark Ready To Start
+	ready() {
+		globalFire.bind(this)('playerReady', this.player.id);
+	}
+
 	start() {
-		setInterval(() => this._fire('recievedJob', new Job()), 5000);
+		if (this.data.hosting) {
+			this.activeJobs = [];
+			this.jobCount = 0;
+
+			setInterval(() => {
+				let j = new Job();
+				this.activeJobs.push(j);
+				this.jobCount++;
+				this.fireEventAtRandomPlayer('recievedJob', j.data);
+			}, 3000);
+		}
 		return Promise.resolve();
 	}
 }
