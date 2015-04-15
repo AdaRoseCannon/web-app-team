@@ -41,8 +41,8 @@ Promise.resolve().then(() => {
 				role: utils.randomFrom(templates.role.roles),
 				title: utils.randomFrom(templates.role.titles)
 			});
-			var hosting = $('#toggle-host').val();
-			var team = hosting ? $('#peerjs-id').html() : $('#team-code-input').val();
+			var hosting = $('#toggle-host')[0].checked;
+			var team = hosting ? $('#peerjs-id').html() : $('#team-code-input').val().toLowerCase();
 
 			// Update the name field on click
 			$($('.toggle-hosting, .form-group.name')[0]).fadeTo(300, 0, () => {
@@ -76,6 +76,7 @@ Promise.resolve().then(() => {
 		});
 
 		$('#founders').append(`<thead><tr><th>Company Name</th><th>Name - Role</th></tr></thead>`);
+
 		game.on('newPlayer', p => {
 			$('#founders').append(hogan.compile(templates.mixins.rolecall).render(p.data, templates.mixins));
 		});
